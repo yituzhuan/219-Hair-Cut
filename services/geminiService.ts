@@ -82,11 +82,10 @@ export const generateHairstyle = async (
       - IMAGE 1 (Face Source): The client. Identity MUST be preserved 100%.
       - IMAGE 2 (Hair Source): The target hairstyle.
       
-      EXECUTION:
-      - Replace the hair in IMAGE 1 with the hair from IMAGE 2.
-      - Keep the visible parts of the face in IMAGE 1 exactly the same.
-      - ALLOW HAIR TO COVER THE FACE: If the hairstyle in IMAGE 2 covers the forehead, cheeks, or eyes, recreate that covering on IMAGE 1. Do not force the full face to be visible.
-      - Ignore any previous hair in IMAGE 1.
+      EXECUTION RULES:
+      1. **NO BEAUTIFICATION**: Do NOT smooth skin, do NOT change eye size, do NOT add makeup. The face structure, skin texture, and lighting must remain exactly as they are in IMAGE 1.
+      2. **HAIR REPLACEMENT**: Replace the hair in IMAGE 1 with the hair from IMAGE 2.
+      3. **OCCLUSION IS ALLOWED**: If the hairstyle in IMAGE 2 (e.g., bangs, side locks) covers parts of the face, you MUST recreate that covering on IMAGE 1. Do not artificially force the whole face to be visible if the style covers it.
       `;
     } else {
       // Instructions for Text-only generation (The preferred method for better face preservation)
@@ -98,10 +97,11 @@ export const generateHairstyle = async (
       Edit IMAGE 1 to give the client a new hairstyle based on the text description.
 
       STRICT EXECUTION RULES:
-      1. **FACIAL PRESERVATION**: Keep the identity of the person 100% consistent. 
-         - **EXCEPTION**: IF the requested hairstyle (e.g., bangs, long side locks, heavy layering) naturally covers parts of the face (forehead, cheeks, jawline, or even eyes), THIS IS PERMITTED. 
-         - **DO NOT** artificially expose the face if the style requires coverage.
-         - Only the *visible* parts of the face (skin texture, features not covered by hair) must remain identical.
+      1. **FACIAL PRESERVATION (CRITICAL)**: 
+         - The identity of the person must remain 100% consistent.
+         - **PROHIBITED**: Do NOT perform any "beautification", skin smoothing, face slimming, or makeup enhancement. Preserve the original skin texture and facial features exactly.
+         - **EXCEPTION**: Hair occlusion is allowed. If the requested hairstyle (e.g., bangs, long side locks) naturally covers parts of the face (forehead, cheeks, jawline, or even eyes), THIS IS PERMITTED and expected.
+         - Do not reshape the visible parts of the face to fit the hair.
       2. **HAIR REPLACEMENT**: Completely replace the original hair with the described style.
       3. **REALISM**: The generated hair must look photorealistic and naturally blended.
       `;
