@@ -13,7 +13,7 @@ const cleanBase64 = (base64Str: string) => {
  */
 export const analyzeHairStyle = async (imageBase64: string): Promise<string> => {
   if (!apiKey) {
-    throw new Error("API Key is missing.");
+    throw new Error("API Key 未配置。请在 Vercel 项目设置中添加名为 'API_KEY' 的环境变量，并重新部署。");
   }
 
   try {
@@ -47,7 +47,7 @@ export const generateHairstyle = async (
   referenceImageBase64?: string
 ): Promise<string> => {
   if (!apiKey) {
-    throw new Error("API Key is missing.");
+    throw new Error("API Key 未配置。请在 Vercel 项目设置中添加名为 'API_KEY' 的环境变量，并重新部署。");
   }
 
   try {
