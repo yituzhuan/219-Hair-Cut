@@ -1,0 +1,7 @@
+{
+  "name": "Copy of 219发廊",
+  "description": "基于Gemini 2.5 Flash Image的智能发型设计与生成平台。",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
