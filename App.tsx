@@ -45,7 +45,7 @@ export default function App() {
     if (!state.referenceImage) return;
     
     setIsAnalyzing(true);
-    setCustomPrompt("正在分析参考图，请稍候...");
+    setCustomPrompt("正在深度分析参考图发型结构，请稍候...");
     
     try {
       const description = await analyzeHairStyle(state.referenceImage);
@@ -67,8 +67,8 @@ export default function App() {
     setState(prev => ({ ...prev, status: GenerationStatus.LOADING, errorMsg: null }));
 
     let finalPrompt = "";
-    // In custom mode, if we have text, we DO NOT send the reference image to the model to avoid "bad transplant".
-    // We rely on the text description (either typed or analyzed) to guide the generation.
+    // In Custom Mode, we now support passing BOTH the reference image and the text description.
+    // This allows the model to see the visual style (Image) AND understand the details (Text).
     let refImageToSend: string | undefined = undefined;
 
     if (mode === 'smart') {
@@ -77,17 +77,18 @@ export default function App() {
       // Custom Mode
       if (customPrompt.trim()) {
          finalPrompt = `请根据以下描述为用户设计发型：${customPrompt}`;
-         // Explicitly keeping refImageToSend as undefined to force Text-to-Image Edit mode
       } else if (state.referenceImage) {
-        // Fallback: If user didn't analyze and didn't type anything, but has an image, 
-        // we might still try the "Visual Transplant" but prompt suggests we should use text.
-        // Let's trigger a quick analysis if prompt is empty? 
-        // Or just fail over to a generic prompt. 
-        finalPrompt = "请参考一张图片（但用户未提供描述），请尝试设计一款自然的发型。";
-        // Here we might send the image as a last resort if prompt is empty
-        refImageToSend = state.referenceImage;
+        // Only image, no text provided
+        finalPrompt = "请严格复刻参考图中的发型结构、长度和质感，将其移植到用户头上。";
       } else {
+        // No image, no text
         finalPrompt = "请根据我的脸型设计一款最适合的时尚发型。";
+      }
+      
+      // Always pass the reference image if it exists in Custom Mode.
+      // If the user wants pure text generation, they can clear the reference image.
+      if (state.referenceImage) {
+        refImageToSend = state.referenceImage;
       }
     }
 
@@ -238,21 +239,26 @@ export default function App() {
                     />
 
                     {state.referenceImage && (
-                      <Button 
-                        variant="secondary" 
-                        onClick={handleAnalyze} 
-                        isLoading={isAnalyzing}
-                        className="w-full border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100"
-                      >
-                         🪄 AI分析提取发型描述
-                      </Button>
+                      <div className="flex flex-col gap-2">
+                        <Button 
+                          variant="secondary" 
+                          onClick={handleAnalyze} 
+                          isLoading={isAnalyzing}
+                          className="w-full border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100"
+                        >
+                           🪄 提取参考图发型描述
+                        </Button>
+                        <p className="text-xs text-gray-500 px-1">
+                          提示：保留参考图可让AI严格参考其视觉结构；若只需参考文字描述，请在分析后清除图片。
+                        </p>
+                      </div>
                     )}
 
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-gray-700">定制需求描述：</label>
                       <textarea 
                         className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-shadow resize-none bg-gray-50 focus:bg-white"
-                        rows={4}
+                        rows={5}
                         placeholder={state.referenceImage ? "点击上方按钮分析参考图，或手动输入描述..." : "例如：帮我设计一个显脸小的短发，染成焦糖色..."}
                         value={customPrompt}
                         onChange={(e) => setCustomPrompt(e.target.value)}

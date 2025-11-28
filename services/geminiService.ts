@@ -18,7 +18,7 @@ export const analyzeHairStyle = async (imageBase64: string): Promise<string> => 
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash', // Flash is fast and good at describing images
+      model: 'gemini-2.5-flash', 
       contents: {
         parts: [
           {
@@ -28,7 +28,17 @@ export const analyzeHairStyle = async (imageBase64: string): Promise<string> => 
             },
           },
           {
-            text: "请作为一名专业发型师，详细分析这张图片中的发型。描述其长度、卷度、刘海样式、发色、质感以及整体风格。输出一段简洁、精准的中文描述，用于作为AI生图的提示词。直接输出描述，不要加‘这张图片...’等废话。",
+            text: `请作为一名资深发型设计总监及AI提示词专家，对这张参考图中的发型进行深度视觉解构。
+            请从以下维度进行精准描述：
+            1. 【剪裁结构】：(如：层次感碎发、一刀切Bob、狼尾鲻鱼头、高层次长发等)
+            2. 【刘海细节】：(如：法式八字刘海、眉上狗啃刘海、轻盈空气刘海、S型侧分等)
+            3. 【卷度与纹理】：(如：羊毛卷、慵懒法式烫、大波浪、丝滑直发、湿发感造型)
+            4. 【发色分析】：(请给出具体的颜色描述，如：冷调黑茶色、浅金亚麻色、脏橘色挑染)
+            
+            输出要求：
+            - 输出一段连贯、画面感极强的中文提示词（Prompt）。
+            - 去除“这张照片展示了”、“图中人物”等赘述，直接描述发型本身。
+            - 重点描述头发的动势和质感，以便生成模型能完美复刻。`,
           },
         ],
       },
@@ -63,7 +73,7 @@ export const generateHairstyle = async (
 
     let instructions = "";
 
-    // 2. Add Reference Image if exists (Only used for Smart Transfer if explicitly requested, but mostly we rely on text now)
+    // 2. Add Reference Image if exists
     if (referenceImageBase64) {
       parts.push({
         inlineData: {
@@ -72,36 +82,39 @@ export const generateHairstyle = async (
         },
       });
       
-      // Strict Visual Transfer Instructions
+      // Hybrid Mode: Visual Reference + Text Guidance
       instructions = `
-      ROLE: Professional Digital Retoucher.
+      ROLE: Professional AI Hair Stylist & Digital Compositor.
       
-      TASK: VISUAL COMPOSITING (HAIR TRANSPLANT).
+      TASK: HAIRSTYLE TRANSFER & ADAPTATION.
       
       INPUTS:
-      - IMAGE 1 (Face Source): The client. Identity MUST be preserved 100%.
-      - IMAGE 2 (Hair Source): The target hairstyle.
+      - IMAGE 1 (Target Face): The user. Identity MUST be preserved 100%.
+      - IMAGE 2 (Reference Hair): The visual source for the hairstyle.
+      - PROMPT: User's specific requirements or analysis of the style.
       
-      EXECUTION RULES:
-      1. **NO BEAUTIFICATION**: Do NOT smooth skin, do NOT change eye size, do NOT add makeup. The face structure, skin texture, and lighting must remain exactly as they are in IMAGE 1.
-      2. **HAIR REPLACEMENT**: Replace the hair in IMAGE 1 with the hair from IMAGE 2.
-      3. **OCCLUSION IS ALLOWED**: If the hairstyle in IMAGE 2 (e.g., bangs, side locks) covers parts of the face, you MUST recreate that covering on IMAGE 1. Do not artificially force the whole face to be visible if the style covers it.
+      EXECUTION GUIDELINES:
+      1. **VISUAL PRIORITY**: Use IMAGE 2 as the primary blueprint for the hairstyle's Structure, Length, and Texture. The goal is to make IMAGE 1 look like they went to the salon and asked for "The style in IMAGE 2".
+      2. **TEXT MODULATION**: Use the PROMPT to understand specific nuances (e.g., color, specific curl tightness). If the PROMPT requests a change (e.g., "Like the photo but shorter"), prioritize the text instruction for that specific attribute while keeping the rest of the visual vibe from IMAGE 2.
+      3. **FACE PRESERVATION (STRICT)**: 
+         - **NO BEAUTIFICATION**: Do NOT smooth skin, do NOT change eye size, do NOT apply makeup filters. Keep the raw reality of IMAGE 1's face.
+         - **IDENTITY LOCK**: The person in the result MUST look exactly like the person in IMAGE 1.
+      4. **OCCLUSION PERMITTED**: If the hairstyle in IMAGE 2 features bangs, layers, or strands that cover the forehead, cheeks, or eyes, you MUST reproduce this occlusion on IMAGE 1. Do not artificially expose the face if the style dictates coverage.
       `;
     } else {
-      // Instructions for Text-only generation (The preferred method for better face preservation)
+      // Text-only Mode
       instructions = `
       INPUTS:
       - IMAGE 1: This is the "TARGET CLIENT".
 
       YOUR TASK:
-      Edit IMAGE 1 to give the client a new hairstyle based on the text description.
+      Edit IMAGE 1 to give the client a new hairstyle based strictly on the text description.
 
       STRICT EXECUTION RULES:
       1. **FACIAL PRESERVATION (CRITICAL)**: 
          - The identity of the person must remain 100% consistent.
          - **PROHIBITED**: Do NOT perform any "beautification", skin smoothing, face slimming, or makeup enhancement. Preserve the original skin texture and facial features exactly.
-         - **EXCEPTION**: Hair occlusion is allowed. If the requested hairstyle (e.g., bangs, long side locks) naturally covers parts of the face (forehead, cheeks, jawline, or even eyes), THIS IS PERMITTED and expected.
-         - Do not reshape the visible parts of the face to fit the hair.
+         - **EXCEPTION**: Hair occlusion is allowed. If the requested hairstyle (e.g., bangs, long side locks) naturally covers parts of the face (forehead, cheeks, jawline, or even eyes), THIS IS PERMITTED.
       2. **HAIR REPLACEMENT**: Completely replace the original hair with the described style.
       3. **REALISM**: The generated hair must look photorealistic and naturally blended.
       `;
